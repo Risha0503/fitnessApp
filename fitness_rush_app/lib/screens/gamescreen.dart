@@ -10,26 +10,40 @@ class GameScreen extends StatefulWidget {
 class _GameScreenState extends State<GameScreen> {
   int jumpCount = 0;
 
-  void increaseJumpCount() { //this function is called when the user presses the "Test Jump" button. It increments the jump count and updates the UI to reflect the new count.
+  double runnerBottom = 140;
+  bool isJumping = false;
+
+  Future<void> performJump() async {
+    if (isJumping) return;
+
     setState(() {
+      isJumping = true;
       jumpCount++;
+      runnerBottom = 240;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    setState(() {
+      runnerBottom = 140;
+      isJumping = false;
     });
   }
 
   @override
-  Widget build(BuildContext context) {//this is the main screen of the game where the user can see their jump count and a button to simulate a jump. The design is simple with a black background and red accents to match the theme of the app. The jump count is displayed at the top left corner, and a button is positioned at the bottom center for easy access.
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fitness Rush'),
         backgroundColor: Colors.red,
       ),
-      body: Stack( //Stack is used to layer the different UI elements on top of each other, allowing for a more dynamic and visually appealing layout.
+      body: Stack(
         children: [
           Container(
             color: Colors.black,
           ),
 
-          Positioned( //Positioned widget is used to place the jump count text at a specific location on the screen, in this case, the top left corner. It allows for precise control over the placement of the UI element.
+          Positioned(
             top: 30,
             left: 20,
             child: Text(
@@ -43,8 +57,8 @@ class _GameScreenState extends State<GameScreen> {
           ),
 
           Positioned(
-            bottom: 140,
-            left: MediaQuery.of(context).size.width / 2 - 30, //MediaQuery is used to get the width of the screen and position the jump icon in the center. By subtracting half of the icon's width (30) from the total width, it ensures that the icon is perfectly centered on the screen.
+            bottom: runnerBottom,
+            left: MediaQuery.of(context).size.width / 2 - 30,
             child: Container(
               width: 60,
               height: 60,
@@ -62,12 +76,12 @@ class _GameScreenState extends State<GameScreen> {
           ),
 
           Positioned(
-            bottom: 40, //This button is positioned at the bottom center of the screen, making it easily accessible for the user to simulate a jump. When pressed, it calls the increaseJumpCount function to update the jump count.
+            bottom: 40,
             left: MediaQuery.of(context).size.width / 2 - 60,
             child: SizedBox(
               width: 120,
               child: ElevatedButton(
-                onPressed: increaseJumpCount,
+                onPressed: performJump,
                 child: const Text('Test Jump'),
               ),
             ),
