@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -43,9 +44,12 @@ class _GameScreenState extends State<GameScreen> {
       ),
       body: Stack(
         children: [
-          Container(
-            color: Colors.black,
-          ),
+         SizedBox.expand(
+  child: Image.asset(
+    'lib/assets/images/stage1.png',
+    fit: BoxFit.cover,
+  ),
+),
 // The Stack widget allows for layering of UI elements, enabling the HUD to be positioned on top of the game background and the runner to be positioned above the ground. Each Positioned widget within the Stack is used to place specific UI components at desired locations on the screen, creating an engaging and interactive game interface.
           Positioned(
             top: 20,
@@ -82,25 +86,18 @@ class _GameScreenState extends State<GameScreen> {
               ),
             ),
           ),
-
-          Positioned(
-            bottom: runnerBottom,
-            left: MediaQuery.of(context).size.width / 2 - 30,
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Text(
-                  '🏃',
-                  style: TextStyle(fontSize: 32),
-                ),
-              ),
-            ),
-          ),
+Positioned(
+  bottom: runnerBottom,
+  left: MediaQuery.of(context).size.width / 2 - 50,
+  child: SizedBox(
+    width: 400,
+    height: 400,
+    child: Image.asset(
+      'lib/assets/images/runner1_back_side.png',
+      fit: BoxFit.contain,
+    ),
+  ),
+),
 
           Positioned(
             bottom: 40,
