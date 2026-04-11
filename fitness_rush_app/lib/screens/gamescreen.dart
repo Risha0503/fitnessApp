@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
+import 'package:fitness_rush_app/screens/challengescreen.dart';
 
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -14,9 +15,47 @@ class _GameScreenState extends State<GameScreen> {
   double runnerBottom = 140;
   bool isJumping = false;
 
-  int coins = 250;
-  String timer = '01:25';
-  double distanceKm = 2.3;
+  int coins = 0;
+  int seconds = 0;
+  double distanceKm = 0.0;
+
+  Timer? gameTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    startGameLoop();
+  }
+//this is where the game loop is implemented. It updates the time, distance, and checks for challenge triggers every second.
+  bool challengeTriggered = false;
+  void startGameLoop() {
+    gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        seconds++;
+        distanceKm += 0.05; // Simulate distance increase
+
+// Trigger challenge at 1 minute  
+        if (seconds == 60 && !challengeTriggered) {
+          challengeTriggered = true;
+          timer.cancel();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ChallengeScreen()), //goes to the challenge screen when the time reaches 1 minute
+          ).then((_) => startGameLoop());
+        }
+      });
+    });
+  }
+// This getter formats the elapsed time in minutes and seconds for display on the HUD.
+  String get formattedTime {
+    final int minutes = seconds ~/ 60;
+    final int secs = seconds % 60;
+
+    final String minStr = minutes.toString().padLeft(2, '0');
+    final String secStr = secs.toString().padLeft(2, '0');
+
+    return '$minStr:$secStr'; // Returns time in MM:SS format
+  }
 
   Future<void> performJump() async {
     if (isJumping) return;
@@ -27,98 +66,25 @@ class _GameScreenState extends State<GameScreen> {
       runnerBottom = 240;
     });
 
-    await Future.delayed(const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 300)); // Simulate jump duration
+
+    if (!mounted) return;
 
     setState(() {
       runnerBottom = 140;
       isJumping = false;
     });
   }
-// this is the main build method for the game screen. It constructs the UI, including the HUD, runner, and jump button. The HUD displays coins, timer, and distance, while the runner is represented by an emoji that moves up when jumping. The jump button triggers the performJump function to simulate a jump action.
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fitness Rush'),
-        backgroundColor: Colors.red,
-      ),
-      body: Stack(
-        children: [
-         SizedBox.expand(
-  child: Image.asset(
-    'lib/assets/images/stage1.png',
-    fit: BoxFit.cover,
-  ),
-),
-// The Stack widget allows for layering of UI elements, enabling the HUD to be positioned on top of the game background and the runner to be positioned above the ground. Each Positioned widget within the Stack is used to place specific UI components at desired locations on the screen, creating an engaging and interactive game interface.
-          Positioned(
-            top: 20,
-            left: 16,
-            right: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.65),// Semi-transparent background
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.red, width: 1.2),
-              ),
-          //this is the HUD (Heads-Up Display) section of the game screen. It is positioned at the top of the screen and displays important game information such as coins, timer, and distance. The HUD has a semi-transparent black background with a red border, and it uses a Row widget to layout the individual HUD items (coins, timer, distance) with appropriate spacing.
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildHudItem('🪙', '$coins'),
-                  _buildHudItem('⏱', timer),
-                  _buildHudItem('📍', '${distanceKm.toStringAsFixed(1)} km'),
-                ],
-              ),
-            ),
-          ),
-// This Positioned widget displays the jump count on the screen. It is placed near the top left corner and shows the number of jumps performed by the player. The text is styled with a white color, larger font size, and bold weight to make it easily visible against the game background.
-          Positioned(
-            top: 90,
-            left: 20,
-            child: Text(
-              'Jumps: $jumpCount',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-Positioned(
-  bottom: runnerBottom,
-  left: MediaQuery.of(context).size.width / 2 - 50,
-  child: SizedBox(
-    width: 400,
-    height: 400,
-    child: Image.asset(
-      'lib/assets/images/runner1_back_side.png',
-      fit: BoxFit.contain,
-    ),
-  ),
-),
 
-          Positioned(
-            bottom: 40,
-            left: MediaQuery.of(context).size.width / 2 - 60,
-            child: SizedBox(
-              width: 120,
-              child: ElevatedButton(
-                onPressed: performJump,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Test Jump'),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  @override
+  void dispose() {
+    gameTimer?.cancel();
+    super.dispose();
   }
-// This helper method builds individual HUD items for the coins, timer, and distance. Each item consists of an icon (emoji) and a corresponding value. The method returns a Row widget that arranges the icon and value horizontally with some spacing in between. The text is styled to be white, bold, and of a specific font size to ensure readability against the game background.
+
+
+ 
+
   Widget _buildHudItem(String icon, String value) {
     return Row(
       children: [
@@ -136,6 +102,82 @@ Positioned(
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Fitness Rush'),
+        backgroundColor: Colors.red,
+      ),
+      body: Stack(
+        children: [
+          SizedBox.expand(
+            child: Image.asset(
+              'lib/assets/images/stage1.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          Container(
+            color: Colors.black.withOpacity(0.25),
+          ),
+
+          Positioned(
+            top: 20,
+            left: 16,
+            right: 16,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.65),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.red, width: 1.2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildHudItem('🪙', '$coins'),
+                  _buildHudItem('⏱', formattedTime),
+                  _buildHudItem('📍', '${distanceKm.toStringAsFixed(1)} km'),
+                ],
+              ),
+            ),
+          ),
+
+          
+          Positioned(
+            bottom: runnerBottom,
+            left: MediaQuery.of(context).size.width / 2 - 60,
+            child: SizedBox(
+              width: 320,
+              height: 320,
+              child: Image.asset(
+                'lib/assets/images/runner1_back_side.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+// This button allows the user to test the jump action, which simulates the runner jumping and updates the jump count.
+          Positioned(
+            bottom: 40,
+            left: MediaQuery.of(context).size.width / 2 - 60,
+            child: SizedBox(
+              width: 120,
+              child: ElevatedButton(
+                onPressed: performJump,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Test Jump'),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
